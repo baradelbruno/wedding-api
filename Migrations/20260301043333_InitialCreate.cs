@@ -19,7 +19,8 @@ namespace WeddingApi.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
-                    Email = table.Column<string>(type: "TEXT", nullable: false),
+                    Email = table.Column<string>(type: "TEXT", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "TEXT", nullable: true),
                     IsAttending = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -29,11 +30,11 @@ namespace WeddingApi.Migrations
 
             migrationBuilder.InsertData(
                 table: "WeddingGuests",
-                columns: new[] { "Id", "Email", "IsAttending", "Name" },
+                columns: new[] { "Id", "Email", "IsAttending", "Name", "PhoneNumber" },
                 values: new object[,]
                 {
-                    { 1, "john.doe@example.com", true, "John Doe" },
-                    { 2, "jane.smith@example.com", false, "Jane Smith" }
+                    { 1, null, false, "John Doe", null },
+                    { 2, null, false, "Jane Smith", null }
                 });
         }
 

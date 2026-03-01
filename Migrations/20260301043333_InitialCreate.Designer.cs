@@ -10,8 +10,8 @@ using WeddingApi.Data;
 namespace WeddingApi.Migrations
 {
     [DbContext(typeof(WeddingDbContext))]
-    [Migration("20260211013155_ChangingEmailAndPhone")]
-    partial class ChangingEmailAndPhone
+    [Migration("20260301043333_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

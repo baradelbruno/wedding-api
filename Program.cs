@@ -17,7 +17,7 @@ builder.Services.AddSwaggerGen();
 // Configure SQLite to use a writable directory in production
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-// In production (Railway), use /tmp for database path
+// In production (Railway), use PostgreSQL if DATABASE_URL is provided  
 if (!builder.Environment.IsDevelopment())
 {
     connectionString = "Data Source=/tmp/wedding.db";
