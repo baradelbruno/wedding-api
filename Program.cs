@@ -29,7 +29,10 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("http://localhost:5175",
                 "http://127.0.0.1:5175",
                 "http://localhost:5174",
-                "http://127.0.0.1:5174")
+                "http://127.0.0.1:5174",
+                "https://wedding-ui-five.vercel.app/",
+                "https://wedding-api-production-26a1.up.railway.app/",
+                "https://www.wedding-api-production-26a1.up.railway.app/")
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
