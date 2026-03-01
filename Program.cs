@@ -14,9 +14,18 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Configure SQLite to use a writable directory in production
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+// In production (Railway), use /tmp for database path
+if (!builder.Environment.IsDevelopment())
+{
+    connectionString = "Data Source=/tmp/wedding.db";
+}
+
 // Add DbContext
 builder.Services.AddDbContext<WeddingDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(connectionString));
 
 builder.Services.AddScoped<IWeddingGuestsService, WeddingGuestsService>();
 
@@ -43,15 +52,20 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    
     try
     {
         var context = services.GetRequiredService<WeddingDbContext>();
-        context.Database.Migrate(); // This creates the database and applies all migrations
+        
+        logger.LogInformation("Applying database migrations...");
+        context.Database.Migrate();
+        logger.LogInformation("Database migrations applied successfully.");
     }
     catch (Exception ex)
     {
-        var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "An error occurred while migrating the database.");
+        throw;
     }
 }
 
