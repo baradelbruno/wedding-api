@@ -58,13 +58,17 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<WeddingDbContext>();
         
-        logger.LogInformation("Applying database migrations...");
-        context.Database.Migrate();
-        logger.LogInformation("Database migrations applied successfully.");
+        logger.LogInformation("Ensuring database is deleted and recreated...");
+        
+        // Delete and recreate the database to ensure clean state
+        context.Database.EnsureDeleted();
+        context.Database.EnsureCreated();
+        
+        logger.LogInformation("Database created successfully.");
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "An error occurred while migrating the database.");
+        logger.LogError(ex, "An error occurred while creating the database.");
         throw;
     }
 }
