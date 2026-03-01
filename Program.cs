@@ -65,7 +65,9 @@ builder.Services.AddCors(options =>
                 "http://localhost:5174",
                 "http://127.0.0.1:5174",
                 "https://wedding-ui-five.vercel.app",
-                "https://wedding-api-production-26a1.up.railway.app")
+                "https://wedding-api-production-26a1.up.railway.app",
+                "https://casamentolarissaebruno.com",      // Your actual domain!
+                "https://www.casamentolarissaebruno.com")   // www version)
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
