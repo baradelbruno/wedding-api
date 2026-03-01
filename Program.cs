@@ -30,16 +30,30 @@ builder.Services.AddCors(options =>
                 "http://127.0.0.1:5175",
                 "http://localhost:5174",
                 "http://127.0.0.1:5174",
-                "https://wedding-ui-five.vercel.app/",
-                "https://wedding-api-production-26a1.up.railway.app/",
-                "https://www.wedding-api-production-26a1.up.railway.app/")
+                "https://wedding-ui-five.vercel.app",
+                "https://wedding-api-production-26a1.up.railway.app")
               .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
+              .AllowAnyHeader();
     });
 });
 
 var app = builder.Build();
+
+// Apply migrations and ensure database is created
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<WeddingDbContext>();
+        context.Database.Migrate(); // This creates the database and applies all migrations
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating the database.");
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
