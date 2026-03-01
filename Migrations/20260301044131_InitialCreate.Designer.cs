@@ -10,7 +10,7 @@ using WeddingApi.Data;
 namespace WeddingApi.Migrations
 {
     [DbContext(typeof(WeddingDbContext))]
-    [Migration("20260301043333_InitialCreate")]
+    [Migration("20260301044131_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

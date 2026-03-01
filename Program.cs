@@ -14,18 +14,43 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configure SQLite to use a writable directory in production
+// Configure database connection
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var usePostgres = false;
 
-// In production (Railway), use PostgreSQL if DATABASE_URL is provided  
+// In production (Railway), use PostgreSQL if DATABASE_URL is provided
 if (!builder.Environment.IsDevelopment())
 {
-    connectionString = "Data Source=/tmp/wedding.db";
+    var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+    
+    if (!string.IsNullOrEmpty(databaseUrl))
+    {
+        // Parse Railway's DATABASE_URL format: postgres://user:password@host:port/dbname
+        var uri = new Uri(databaseUrl);
+        var userInfo = uri.UserInfo.Split(':');
+        
+        connectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.LocalPath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
+        usePostgres = true;
+    }
+    else
+    {
+        // Fallback to SQLite if no DATABASE_URL
+        connectionString = "Data Source=/tmp/wedding.db";
+    }
 }
 
-// Add DbContext
+// Add DbContext with appropriate provider
 builder.Services.AddDbContext<WeddingDbContext>(options =>
-    options.UseSqlite(connectionString));
+{
+    if (usePostgres)
+    {
+        options.UseNpgsql(connectionString);
+    }
+    else
+    {
+        options.UseSqlite(connectionString);
+    }
+});
 
 builder.Services.AddScoped<IWeddingGuestsService, WeddingGuestsService>();
 
@@ -58,17 +83,13 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<WeddingDbContext>();
         
-        logger.LogInformation("Ensuring database is deleted and recreated...");
-        
-        // Delete and recreate the database to ensure clean state
-        context.Database.EnsureDeleted();
-        context.Database.EnsureCreated();
-        
-        logger.LogInformation("Database created successfully.");
+        logger.LogInformation("Applying database migrations...");
+        context.Database.Migrate();
+        logger.LogInformation("Database migrations applied successfully.");
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "An error occurred while creating the database.");
+        logger.LogError(ex, "An error occurred while migrating the database.");
         throw;
     }
 }
