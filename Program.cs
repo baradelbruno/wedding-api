@@ -47,5 +47,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowReact");
 app.UseAuthorization();
+
+// Add a root endpoint for health checks
+app.MapGet("/", () => Results.Ok(new { 
+    status = "healthy", 
+    message = "Wedding API is running",
+    endpoints = new[] { "/WeddingGuests" }
+}));
+
 app.MapControllers();
 app.Run();
