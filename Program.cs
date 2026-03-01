@@ -34,7 +34,8 @@ builder.Services.AddCors(options =>
                 "https://wedding-api-production-26a1.up.railway.app/",
                 "https://www.wedding-api-production-26a1.up.railway.app/")
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
