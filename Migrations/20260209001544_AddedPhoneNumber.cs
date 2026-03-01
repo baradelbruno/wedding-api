@@ -14,22 +14,22 @@ namespace WeddingApi.Migrations
                 name: "PhoneNumber",
                 table: "WeddingGuests",
                 type: "TEXT",
-                nullable: false,
-                defaultValue: "");
+                nullable: true,
+                defaultValue: null);
 
             migrationBuilder.UpdateData(
                 table: "WeddingGuests",
                 keyColumn: "Id",
                 keyValue: 1,
                 column: "PhoneNumber",
-                value: "123-456-7890");
+                value: null);
 
             migrationBuilder.UpdateData(
                 table: "WeddingGuests",
                 keyColumn: "Id",
                 keyValue: 2,
                 column: "PhoneNumber",
-                value: "987-654-3210");
+                value: null);
         }
 
         /// <inheritdoc />
