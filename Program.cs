@@ -14,9 +14,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configure database connection
+// Configure database connection - Always use PostgreSQL
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-var usePostgres = false;
 
 // In production (Railway), use PostgreSQL if DATABASE_URL is provided
 if (!builder.Environment.IsDevelopment())
@@ -30,31 +29,23 @@ if (!builder.Environment.IsDevelopment())
         var userInfo = uri.UserInfo.Split(':');
         
         connectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.LocalPath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
-        usePostgres = true;
-    }
-    else
-    {
-        // Fallback to SQLite if no DATABASE_URL
-        connectionString = "Data Source=/tmp/wedding.db";
     }
 }
 
-// Add DbContext with appropriate provider
+// Add DbContext with PostgreSQL
 builder.Services.AddDbContext<WeddingDbContext>(options =>
 {
-    if (usePostgres)
-    {
-        options.UseNpgsql(connectionString);
-    }
-    else
-    {
-        options.UseSqlite(connectionString);
-    }
+    options.UseNpgsql(connectionString);
 });
 
 builder.Services.AddScoped<IWeddingGuestsService, WeddingGuestsService>();
+builder.Services.AddScoped<IGiftService, GiftService>();
+builder.Services.AddScoped<IGiftPurchaseService, GiftPurchaseService>();
 
+builder.Services.AddScoped<IGiftRepository, GiftRepository>();
+builder.Services.AddScoped<IGiftPurchaseRepository, GiftPurchaseRepository>();
 builder.Services.AddScoped<IWeddingGuestsRepository, WeddingGuestsRepository>();
+
 
 builder.Services.AddCors(options =>
 {
@@ -111,7 +102,7 @@ app.UseAuthorization();
 app.MapGet("/", () => Results.Ok(new { 
     status = "healthy", 
     message = "Wedding API is running",
-    endpoints = new[] { "/WeddingGuests" }
+    endpoints = new[] { "/WeddingGuests", "/Gifts" }
 }));
 
 app.MapControllers();

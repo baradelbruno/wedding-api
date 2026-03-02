@@ -9,8 +9,8 @@ namespace WeddingApi.Data
         {
             var optionsBuilder = new DbContextOptionsBuilder<WeddingDbContext>();
             
-            // Use PostgreSQL for migrations (temporary connection string)
-            optionsBuilder.UseNpgsql("Host=localhost;Database=wedding_design;Username=postgres;Password=postgres");
+            // Update with your actual PostgreSQL password
+            optionsBuilder.UseNpgsql("Host=localhost;Database=wedding_design;Username=postgres;Password=password");
 
             return new WeddingDbContext(optionsBuilder.Options);
         }
