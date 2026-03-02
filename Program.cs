@@ -57,8 +57,8 @@ builder.Services.AddCors(options =>
                 "http://127.0.0.1:5174",
                 "https://wedding-ui-five.vercel.app",
                 "https://wedding-api-production-26a1.up.railway.app",
-                "https://casamentolarissaebruno.com",      // Your actual domain!
-                "https://www.casamentolarissaebruno.com")   // www version)
+                "https://casamentolarissaebruno.com",
+                "https://www.casamentolarissaebruno.com")
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
@@ -94,6 +94,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     app.UseHttpsRedirection();
 }
+
+// Enable static files for serving uploaded images
+app.UseStaticFiles();
 
 app.UseCors("AllowReact");
 app.UseAuthorization();

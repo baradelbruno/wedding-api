@@ -7,6 +7,7 @@
         public string? Description { get; set; }
         public decimal Price { get; set; }
         public string? ImageUrl { get; set; }
+        public string? ImageFileName { get; set; }
 
         // Navigation property - a gift can have multiple purchases
         public ICollection<GiftPurchase> Purchases { get; set; } = new List<GiftPurchase>();

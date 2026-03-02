@@ -8,10 +8,12 @@ namespace WeddingApi.Controllers
     public class GiftsController : ControllerBase
     {
         private readonly IGiftService _giftService;
+        private readonly IWebHostEnvironment _environment;
 
-        public GiftsController(IGiftService iGiftService)
+        public GiftsController(IGiftService iGiftService, IWebHostEnvironment environment)
         {
             _giftService = iGiftService;
+            _environment = environment;
         }
 
         [HttpGet]
@@ -39,19 +41,84 @@ namespace WeddingApi.Controllers
 
         [HttpPost]
         // POST: GiftsController
-        public async Task<ActionResult> Post([FromBody] CreateGiftRequest request)
+        public async Task<ActionResult> Post([FromForm] CreateGiftRequest request)
         {
-            await _giftService.CreateGiftAsync(request.Name, request.Description, request.Price, request.ImageUrl);
+            string? imageUrl = null;
+            string? imageFileName = null;
+
+            // Handle image upload
+            if (request.Image != null && request.Image.Length > 0)
+            {
+                var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "gifts");
+                Directory.CreateDirectory(uploadsFolder);
+
+                imageFileName = $"{Guid.NewGuid()}_{request.Image.FileName}";
+                var filePath = Path.Combine(uploadsFolder, imageFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await request.Image.CopyToAsync(stream);
+                }
+
+                imageUrl = $"/uploads/gifts/{imageFileName}";
+            }
+            else if (!string.IsNullOrEmpty(request.ImageUrl))
+            {
+                imageUrl = request.ImageUrl;
+            }
+
+            await _giftService.CreateGiftAsync(request.Name, request.Description, request.Price, imageUrl, imageFileName);
             return Ok();
         }
 
         [HttpPut("{id}")]
         // PUT: GiftsController/5
-        public async Task<ActionResult> Put(int id, [FromBody] UpdateGiftRequest request)
+        public async Task<ActionResult> Put(int id, [FromForm] UpdateGiftRequest request)
         {
             try
             {
-                await _giftService.UpdateGiftAsync(id, request.Name, request.Description, request.Price, request.ImageUrl);
+                var gift = await _giftService.GetGiftByIdAsync(id);
+                if (gift == null)
+                {
+                    return NotFound($"Gift with id {id} not found");
+                }
+
+                string? imageUrl = gift.ImageUrl;
+                string? imageFileName = gift.ImageFileName;
+
+                // Handle new image upload
+                if (request.Image != null && request.Image.Length > 0)
+                {
+                    // Delete old image if exists
+                    if (!string.IsNullOrEmpty(gift.ImageFileName))
+                    {
+                        var oldImagePath = Path.Combine(_environment.WebRootPath, "uploads", "gifts", gift.ImageFileName);
+                        if (System.IO.File.Exists(oldImagePath))
+                        {
+                            System.IO.File.Delete(oldImagePath);
+                        }
+                    }
+
+                    // Upload new image
+                    var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "gifts");
+                    Directory.CreateDirectory(uploadsFolder);
+
+                    imageFileName = $"{Guid.NewGuid()}_{request.Image.FileName}";
+                    var filePath = Path.Combine(uploadsFolder, imageFileName);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await request.Image.CopyToAsync(stream);
+                    }
+
+                    imageUrl = $"/uploads/gifts/{imageFileName}";
+                }
+                else if (!string.IsNullOrEmpty(request.ImageUrl))
+                {
+                    imageUrl = request.ImageUrl;
+                }
+
+                await _giftService.UpdateGiftAsync(id, request.Name, request.Description, request.Price, imageUrl, imageFileName);
                 return Ok();
             }
             catch (Exception ex)
@@ -64,6 +131,18 @@ namespace WeddingApi.Controllers
         // DELETE: GiftsController/5
         public async Task<ActionResult> Delete(int id)
         {
+            var gift = await _giftService.GetGiftByIdAsync(id);
+            
+            // Delete associated image file
+            if (gift != null && !string.IsNullOrEmpty(gift.ImageFileName))
+            {
+                var imagePath = Path.Combine(_environment.WebRootPath, "uploads", "gifts", gift.ImageFileName);
+                if (System.IO.File.Exists(imagePath))
+                {
+                    System.IO.File.Delete(imagePath);
+                }
+            }
+
             await _giftService.DeleteGiftAsync(id);
             return Ok();
         }
@@ -99,8 +178,8 @@ namespace WeddingApi.Controllers
         }
 
         // DTOs for the requests
-        public record CreateGiftRequest(string Name, string? Description, decimal Price, string? ImageUrl);
-        public record UpdateGiftRequest(string Name, string? Description, decimal Price, string? ImageUrl);
+        public record CreateGiftRequest(string Name, string? Description, decimal Price, IFormFile? Image, string? ImageUrl);
+        public record UpdateGiftRequest(string Name, string? Description, decimal Price, IFormFile? Image, string? ImageUrl);
         public record PurchaseGiftRequest(string PurchasedBy, string? Email, string? Phone, string PixCode);
     }
 }
