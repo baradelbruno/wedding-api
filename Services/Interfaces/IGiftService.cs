@@ -6,8 +6,8 @@ namespace WeddingApi.Services.Interfaces
     {
         Task<IEnumerable<Gift>> GetAllGiftsAsync();
         Task<Gift?> GetGiftByIdAsync(int id);
-        Task CreateGiftAsync(string name, string? description, decimal price, string? imageUrl, string? imageFileName, string? pixPaymentCode);
-        Task UpdateGiftAsync(int id, string name, string? description, decimal price, string? imageUrl, string? imageFileName, string? pixPaymentCode);
+        Task CreateGiftAsync(string name, string? description, decimal price, string? imageUrl, string? pixPaymentCode);
+        Task UpdateGiftAsync(int id, string name, string? description, decimal price, string? imageUrl, string? pixPaymentCode);
         Task DeleteGiftAsync(int id);
         Task<GiftPurchase> PurchaseGiftAsync(int giftId, string purchasedBy, string? email, string? phone);
         Task ConfirmPaymentAsync(int purchaseId);

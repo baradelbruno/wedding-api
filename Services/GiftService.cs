@@ -25,7 +25,7 @@ namespace WeddingApi.Services
             return await _giftRepository.GetGiftByIdAsync(id);
         }
 
-        public async Task CreateGiftAsync(string name, string? description, decimal price, string? imageUrl, string? imageFileName, string? pixPaymentCode)
+        public async Task CreateGiftAsync(string name, string? description, decimal price, string? imageUrl, string? pixPaymentCode)
         {
             var gift = new Gift
             {
@@ -33,14 +33,13 @@ namespace WeddingApi.Services
                 Description = description,
                 Price = price,
                 ImageUrl = imageUrl,
-                ImageFileName = imageFileName,
                 PixPaymentCode = pixPaymentCode
             };
 
             await _giftRepository.CreateGiftAsync(gift);
         }
 
-        public async Task UpdateGiftAsync(int id, string name, string? description, decimal price, string? imageUrl, string? imageFileName, string? pixPaymentCode)
+        public async Task UpdateGiftAsync(int id, string name, string? description, decimal price, string? imageUrl, string? pixPaymentCode)
         {
             var gift = await _giftRepository.GetGiftByIdAsync(id);
             
@@ -53,7 +52,6 @@ namespace WeddingApi.Services
             gift.Description = description;
             gift.Price = price;
             gift.ImageUrl = imageUrl;
-            gift.ImageFileName = imageFileName;
             gift.PixPaymentCode = pixPaymentCode;
 
             await _giftRepository.UpdateGiftAsync(gift);

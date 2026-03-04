@@ -10,10 +10,27 @@ namespace WeddingApi.Controllers
         private readonly IGiftService _giftService;
         private readonly IWebHostEnvironment _environment;
 
+        private const string GiftUploadsRelativeUrlPrefix = "/uploads/gifts/";
+
         public GiftsController(IGiftService iGiftService, IWebHostEnvironment environment)
         {
             _giftService = iGiftService;
             _environment = environment;
+        }
+
+        private static string? TryGetUploadedGiftFileName(string? imageUrl)
+        {
+            if (string.IsNullOrWhiteSpace(imageUrl))
+            {
+                return null;
+            }
+
+            if (!imageUrl.StartsWith(GiftUploadsRelativeUrlPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            return Path.GetFileName(imageUrl);
         }
 
         [HttpGet]
@@ -44,7 +61,7 @@ namespace WeddingApi.Controllers
         public async Task<ActionResult> Post([FromForm] CreateGiftRequest request)
         {
             string? imageUrl = null;
-            string? imageFileName = null;
+            string? uploadedFileName = null;
 
             // Handle image upload
             if (request.Image != null && request.Image.Length > 0)
@@ -52,22 +69,22 @@ namespace WeddingApi.Controllers
                 var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "gifts");
                 Directory.CreateDirectory(uploadsFolder);
 
-                imageFileName = $"{Guid.NewGuid()}_{request.Image.FileName}";
-                var filePath = Path.Combine(uploadsFolder, imageFileName);
+                uploadedFileName = $"{Guid.NewGuid()}_{request.Image.FileName}";
+                var filePath = Path.Combine(uploadsFolder, uploadedFileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await request.Image.CopyToAsync(stream);
                 }
 
-                imageUrl = $"/uploads/gifts/{imageFileName}";
+                imageUrl = $"{GiftUploadsRelativeUrlPrefix}{uploadedFileName}";
             }
             else if (!string.IsNullOrEmpty(request.ImageUrl))
             {
                 imageUrl = request.ImageUrl;
             }
 
-            await _giftService.CreateGiftAsync(request.Name, request.Description, request.Price, imageUrl, imageFileName, request.PixPaymentCode);
+            await _giftService.CreateGiftAsync(request.Name, request.Description, request.Price, imageUrl, request.PixPaymentCode);
             return Ok();
         }
 
@@ -84,15 +101,15 @@ namespace WeddingApi.Controllers
                 }
 
                 string? imageUrl = gift.ImageUrl;
-                string? imageFileName = gift.ImageFileName;
 
                 // Handle new image upload
                 if (request.Image != null && request.Image.Length > 0)
                 {
                     // Delete old image if exists
-                    if (!string.IsNullOrEmpty(gift.ImageFileName))
+                    var oldUploadedFileName = TryGetUploadedGiftFileName(gift.ImageUrl);
+                    if (!string.IsNullOrEmpty(oldUploadedFileName))
                     {
-                        var oldImagePath = Path.Combine(_environment.WebRootPath, "uploads", "gifts", gift.ImageFileName);
+                        var oldImagePath = Path.Combine(_environment.WebRootPath, "uploads", "gifts", oldUploadedFileName);
                         if (System.IO.File.Exists(oldImagePath))
                         {
                             System.IO.File.Delete(oldImagePath);
@@ -103,22 +120,22 @@ namespace WeddingApi.Controllers
                     var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "gifts");
                     Directory.CreateDirectory(uploadsFolder);
 
-                    imageFileName = $"{Guid.NewGuid()}_{request.Image.FileName}";
-                    var filePath = Path.Combine(uploadsFolder, imageFileName);
+                    var uploadedFileName = $"{Guid.NewGuid()}_{request.Image.FileName}";
+                    var filePath = Path.Combine(uploadsFolder, uploadedFileName);
 
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
                         await request.Image.CopyToAsync(stream);
                     }
 
-                    imageUrl = $"/uploads/gifts/{imageFileName}";
+                    imageUrl = $"{GiftUploadsRelativeUrlPrefix}{uploadedFileName}";
                 }
                 else if (!string.IsNullOrEmpty(request.ImageUrl))
                 {
                     imageUrl = request.ImageUrl;
                 }
 
-                await _giftService.UpdateGiftAsync(id, request.Name, request.Description, request.Price, imageUrl, imageFileName, request.PixPaymentCode);
+                await _giftService.UpdateGiftAsync(id, request.Name, request.Description, request.Price, imageUrl, request.PixPaymentCode);
                 return Ok();
             }
             catch (Exception ex)
@@ -134,9 +151,10 @@ namespace WeddingApi.Controllers
             var gift = await _giftService.GetGiftByIdAsync(id);
             
             // Delete associated image file
-            if (gift != null && !string.IsNullOrEmpty(gift.ImageFileName))
+            var uploadedFileName = TryGetUploadedGiftFileName(gift?.ImageUrl);
+            if (!string.IsNullOrEmpty(uploadedFileName))
             {
-                var imagePath = Path.Combine(_environment.WebRootPath, "uploads", "gifts", gift.ImageFileName);
+                var imagePath = Path.Combine(_environment.WebRootPath, "uploads", "gifts", uploadedFileName);
                 if (System.IO.File.Exists(imagePath))
                 {
                     System.IO.File.Delete(imagePath);
