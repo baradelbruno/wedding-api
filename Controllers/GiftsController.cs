@@ -67,7 +67,7 @@ namespace WeddingApi.Controllers
                 imageUrl = request.ImageUrl;
             }
 
-            await _giftService.CreateGiftAsync(request.Name, request.Description, request.Price, imageUrl, imageFileName);
+            await _giftService.CreateGiftAsync(request.Name, request.Description, request.Price, imageUrl, imageFileName, request.PixPaymentCode);
             return Ok();
         }
 
@@ -118,7 +118,7 @@ namespace WeddingApi.Controllers
                     imageUrl = request.ImageUrl;
                 }
 
-                await _giftService.UpdateGiftAsync(id, request.Name, request.Description, request.Price, imageUrl, imageFileName);
+                await _giftService.UpdateGiftAsync(id, request.Name, request.Description, request.Price, imageUrl, imageFileName, request.PixPaymentCode);
                 return Ok();
             }
             catch (Exception ex)
@@ -153,7 +153,7 @@ namespace WeddingApi.Controllers
         {
             try
             {
-                var purchase = await _giftService.PurchaseGiftAsync(id, request.PurchasedBy, request.Email, request.Phone, request.PixCode);
+                var purchase = await _giftService.PurchaseGiftAsync(id, request.PurchasedBy, request.Email, request.Phone);
                 return Ok(purchase);
             }
             catch (Exception ex)
@@ -178,8 +178,8 @@ namespace WeddingApi.Controllers
         }
 
         // DTOs for the requests
-        public record CreateGiftRequest(string Name, string? Description, decimal Price, IFormFile? Image, string? ImageUrl);
-        public record UpdateGiftRequest(string Name, string? Description, decimal Price, IFormFile? Image, string? ImageUrl);
-        public record PurchaseGiftRequest(string PurchasedBy, string? Email, string? Phone, string PixCode);
+        public record CreateGiftRequest(string Name, string? Description, decimal Price, IFormFile? Image, string? ImageUrl, string? PixPaymentCode);
+        public record UpdateGiftRequest(string Name, string? Description, decimal Price, IFormFile? Image, string? ImageUrl, string? PixPaymentCode);
+        public record PurchaseGiftRequest(string PurchasedBy, string? Email, string? Phone);
     }
 }

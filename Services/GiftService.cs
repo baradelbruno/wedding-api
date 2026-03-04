@@ -25,7 +25,7 @@ namespace WeddingApi.Services
             return await _giftRepository.GetGiftByIdAsync(id);
         }
 
-        public async Task CreateGiftAsync(string name, string? description, decimal price, string? imageUrl, string? imageFileName)
+        public async Task CreateGiftAsync(string name, string? description, decimal price, string? imageUrl, string? imageFileName, string? pixPaymentCode)
         {
             var gift = new Gift
             {
@@ -33,13 +33,14 @@ namespace WeddingApi.Services
                 Description = description,
                 Price = price,
                 ImageUrl = imageUrl,
-                ImageFileName = imageFileName
+                ImageFileName = imageFileName,
+                PixPaymentCode = pixPaymentCode
             };
 
             await _giftRepository.CreateGiftAsync(gift);
         }
 
-        public async Task UpdateGiftAsync(int id, string name, string? description, decimal price, string? imageUrl, string? imageFileName)
+        public async Task UpdateGiftAsync(int id, string name, string? description, decimal price, string? imageUrl, string? imageFileName, string? pixPaymentCode)
         {
             var gift = await _giftRepository.GetGiftByIdAsync(id);
             
@@ -53,6 +54,7 @@ namespace WeddingApi.Services
             gift.Price = price;
             gift.ImageUrl = imageUrl;
             gift.ImageFileName = imageFileName;
+            gift.PixPaymentCode = pixPaymentCode;
 
             await _giftRepository.UpdateGiftAsync(gift);
         }
@@ -62,13 +64,18 @@ namespace WeddingApi.Services
             await _giftRepository.DeleteGiftAsync(id);
         }
 
-        public async Task<GiftPurchase> PurchaseGiftAsync(int giftId, string purchasedBy, string? email, string? phone, string pixCode)
+        public async Task<GiftPurchase> PurchaseGiftAsync(int giftId, string purchasedBy, string? email, string? phone)
         {
             var gift = await _giftRepository.GetGiftByIdAsync(giftId);
             
             if (gift == null)
             {
                 throw new Exception($"No gift found with id {giftId}");
+            }
+
+            if (string.IsNullOrWhiteSpace(gift.PixPaymentCode))
+            {
+                throw new Exception("PIX payment code is not configured for this gift");
             }
 
             var purchase = new GiftPurchase
@@ -78,7 +85,7 @@ namespace WeddingApi.Services
                 PurchaserEmail = email,
                 PurchaserPhone = phone,
                 PurchasedDate = DateTime.UtcNow,
-                PixCode = pixCode,
+                PixCode = gift.PixPaymentCode,
                 PaymentConfirmed = false
             };
 
